@@ -4,6 +4,8 @@
  */
 package gui;
 
+import engine.Session;
+
 /**
  * @author Vanilson Pires Date 12 de mai de 2018
  *
@@ -11,7 +13,10 @@ package gui;
 public class Chat {
 
 	public static void main(String[] args) {
-		new Gui();
+		if (Session.getInstane().isLogged())
+			new Gui();
+		else
+			new Authentication();
 	}
 
 }

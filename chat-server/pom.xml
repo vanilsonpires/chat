@@ -33,7 +33,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>chat/src/main/java/gui/Chat.java</mainClass>
+							<mainClass>chat-server/src/main/java/gui/Chat.java</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

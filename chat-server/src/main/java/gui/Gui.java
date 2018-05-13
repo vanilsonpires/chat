@@ -117,7 +117,7 @@ public class Gui extends JFrame implements Observer {
 			server.listen(Integer.valueOf(porta.getText()));
 		} catch (BindException e) {
 			setStatus(Status.DOOR_IN_USE);
-			showWarning("Esta porta j· est· em uso!");
+			showWarning("Esta porta j√° est√° em uso!");
 		} catch (Exception e) {
 			e.printStackTrace();
 			setStatus(Status.ERROR);
@@ -126,7 +126,7 @@ public class Gui extends JFrame implements Observer {
 	}
 
 	/**
-	 * Notifica um erro ao usu·rio
+	 * Notifica um erro ao usu√°rio
 	 * 
 	 * @author Vanilson Pires Date 12 de mai de 2018
 	 * @param exception
@@ -140,13 +140,13 @@ public class Gui extends JFrame implements Observer {
 	}
 
 	/**
-	 * Notifica um erro ao usu·rio
+	 * Notifica um erro ao usu√°rio
 	 * 
 	 * @author Vanilson Pires Date 12 de mai de 2018
 	 * @param exception
 	 */
 	public void showWarning(String msg) {
-		JOptionPane.showMessageDialog(this, msg, "ATEN«√O", JOptionPane.WARNING_MESSAGE);
+		JOptionPane.showMessageDialog(this, msg, "ATEN√á√ÉO", JOptionPane.WARNING_MESSAGE);
 	}
 
 	/**
@@ -194,7 +194,7 @@ public class Gui extends JFrame implements Observer {
 		panelTexts.add(labelStatus);
 		panelTexts.add(this.labelStatus);
 
-		JLabel labelClientes = new JLabel("Qtd. Conexıes: ");
+		JLabel labelClientes = new JLabel("Qtd. Conex√µes: ");
 		labelClientes.setFont(DEFAULT_FONT_LABEL);
 		panelTexts.add(labelClientes);
 		panelTexts.add(qtdClientes);
@@ -283,7 +283,7 @@ public class Gui extends JFrame implements Observer {
 			return;
 		}
 
-		// Quando receber uma notificaÁ„o, escreve no log
+		// Quando receber uma notifica√ß√µes, escreve no log
 		if (arg != null)
 
 			addLog(String.valueOf(arg));

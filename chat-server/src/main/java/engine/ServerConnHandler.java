@@ -23,7 +23,7 @@ public class ServerConnHandler extends Thread{
 	private ObjectOutputStream dout;
 
 	/**
-	 * Construtor padr„o da classe
+	 * Construtor padr√£o da classe
 	 * @author Vanilson Pires
 	 * Date 12 de mai de 2018
 	 * @param servidor
@@ -67,8 +67,8 @@ public class ServerConnHandler extends Thread{
 				}
 
 				/**
-				 * Caso receba uma notificaÁ„o FINISH, remove o cliente do servidor
-				 * Significa que o cliente est· saindo do bate papo
+				 * Caso receba uma notific√£o FINISH, remove o cliente do servidor
+				 * Significa que o cliente est√° saindo do bate papo
 				 */
 				if (mensagem != null && mensagem.equals("FINISH")) {
 					servidor.removeConnection(socket);

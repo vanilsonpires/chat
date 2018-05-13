@@ -11,6 +11,8 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.Observable;
 
+import constraints.Message;
+
 /**
  * @author Vanilson Pires Date 12 de mai de 2018
  *
@@ -28,45 +30,55 @@ public class SocketClient extends Observable implements Serializable {
 	private ObjectInputStream din;
 	private ObjectOutputStream dout;
 
-	public void ligar(int port, String ip) {
-		try {
+	private String ipServer;
+	private Integer porta;
+	private String userName;
 
-			// criar o socket
-			socket = new Socket(ip, port);
+	public void ligar(int port, String ip, String name) {
+		this.porta = port;
+		this.ipServer = ip;
+		this.userName = name;
 
-			// Vamos obter as streams de comunicação fornecidas pelo socket
-			din = new ObjectInputStream(socket.getInputStream());
-			dout = new ObjectOutputStream(socket.getOutputStream());
+		new Thread(new Runnable() {
+			// estamos a usar uma classe anônima...
+			public void run() {
+				
+				try {
+					
+					// criar o socket
+					socket = new Socket(ip, port);
+					
+					//Se chegar até aqui, então a conexão foi realizada com sucesso
+					//Deve se então realizar uma notificação
+					setChanged();
+					notifyObservers(Message.CONNECTION_SUCCESSFUL);
 
-			// e iniciar a thread que vai estar constantemente espera de novas
-			// mensages. Se não usassemos uma thread, não conseguiamos receber
-			// mensagens enquanto estivessemos a escrever e toda a parte gráfica
-			// ficaria bloqueada.
-			new Thread(new Runnable() {
-				// estamos a usar uma classe anônima...
-				public void run() {
-					try {
-						while (true) {
+					// Vamos obter as streams de comunicação fornecidas pelo socket
+					din = new ObjectInputStream(socket.getInputStream());
+					dout = new ObjectOutputStream(socket.getOutputStream());
 
-							String object = din.readUTF();
+					// e iniciar a thread que vai estar constantemente espera de novas
+					// mensages. Se não usassemos uma thread, não conseguiamos receber
+					// mensagens enquanto estivessemos a escrever e toda a parte gráfica
+					// ficaria bloqueada.
+					
+					while (true) {
 
-							// sequencialmente, ler as mensagens uma a uma e
-							// acrescentar ao
-							// texto que já recebemos
-							// para o utilizador ver
-							setChanged();
-							notifyObservers(object);
-						}
-					} catch (Exception e) {
-						// TODO: handle exception
+						String object = din.readUTF();
+
+						// sequencialmente, ler as mensagens uma a uma e
+						// acrescentar ao
+						// texto que já recebemos
+						// para o utilizador ver
+						setChanged();
+						notifyObservers(object);
 					}
+				} catch (Exception e) {
+					setChanged();
+					notifyObservers(Message.CONNECTION_FAIL);
 				}
-			}).start();
-
-		} catch (IOException ex) {
-			setChanged();
-			notifyObservers(ex);
-		}
+			}
+		}).start();
 	}
 
 	public void send(String message) throws IOException {
@@ -85,6 +97,42 @@ public class SocketClient extends Observable implements Serializable {
 	}
 
 	public boolean isClosed() {
-		return socket.isClosed();
+		return socket != null ? socket.isClosed() : true;
+	}
+
+	/**
+	 * @author Vanilson Pires
+	 * Date 13 de mai de 2018
+	 * @return the socket
+	 */
+	public Socket getSocket() {
+		return socket;
+	}
+
+	/**
+	 * @author Vanilson Pires
+	 * Date 13 de mai de 2018
+	 * @return the ipServer
+	 */
+	public String getIpServer() {
+		return ipServer;
+	}
+
+	/**
+	 * @author Vanilson Pires
+	 * Date 13 de mai de 2018
+	 * @return the porta
+	 */
+	public Integer getPorta() {
+		return porta;
+	}
+	
+	/**
+	 * @author Vanilson Pires
+	 * Date 13 de mai de 2018
+	 * @return the userName
+	 */
+	public String getUserName() {
+		return userName;
 	}
 }
