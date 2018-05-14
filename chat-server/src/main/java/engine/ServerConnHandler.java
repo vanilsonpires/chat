@@ -4,28 +4,27 @@
  */
 package engine;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 
 /**
- * @author Vanilson Pires
- * Date 12 de mai de 2018
+ * @author Vanilson Pires Date 12 de mai de 2018
  *
  */
-public class ServerConnHandler extends Thread{
-	
+public class ServerConnHandler extends Thread {
+
 	private SocketServer servidor;
 	private Socket socket;
-	private ObjectOutputStream dout;
+	private DataOutputStream dout;
 
 	/**
 	 * Construtor padrão da classe
-	 * @author Vanilson Pires
-	 * Date 12 de mai de 2018
+	 * 
+	 * @author Vanilson Pires Date 12 de mai de 2018
 	 * @param servidor
 	 * @param cliente
 	 * @throws IOException
@@ -33,13 +32,12 @@ public class ServerConnHandler extends Thread{
 	public ServerConnHandler(SocketServer servidor, Socket cliente) throws IOException {
 		this.servidor = servidor;
 		this.socket = cliente;
-		dout = new ObjectOutputStream(socket.getOutputStream());
+		dout = new DataOutputStream(socket.getOutputStream());
 		start();
 	}
-	
+
 	/**
-	 * @author Vanilson Pires
-	 * Date 12 de mai de 2018
+	 * @author Vanilson Pires Date 12 de mai de 2018
 	 * @return the socket
 	 */
 	public Socket getSocket() {
@@ -48,27 +46,48 @@ public class ServerConnHandler extends Thread{
 
 	@Override
 	public void run() {
-		
-		ObjectInputStream din = null;
-		
+
+		DataInputStream din = null;
+
 		try {
 			// Captura a strean de leitura e escrita
-			din = new ObjectInputStream(socket.getInputStream());
+			din = new DataInputStream(socket.getInputStream());
 			String mensagem = null;
 			while (true) {
 
 				try {
+					System.out.println("Esperando novas mensagens...");
 					mensagem = din.readUTF();
+					System.out.println("Mensagem recebida pelo servidor: "+mensagem);					
+					servidor.addLog(mensagem);
+
+					// Se for solicitado a listagem de usuários...
+					if (mensagem != null && mensagem.trim().equals("GET_USERS")) {
+						//Envia uma resposta com os usuários
+						enviarMensagem("GET_USERS:"+servidor.getUsers());						
+						//Se estiver infornando um usuário que está onine...
+					} else if (mensagem.contains("session:user{") 
+							&& mensagem.contains("username:") 
+							&& mensagem.contains("status:")
+							&& mensagem.contains(",")
+							&& mensagem.contains("};")) {
+						
+						if(servidor.addUser(socket, mensagem)){
+							enviarMensagem("CONNECTION_SUCCESSFUL");
+						}else{
+							enviarMensagem("EXISTING_USER");
+							servidor.removeConnection(socket);
+						}						
+					}
+
 					System.err.println("LIDO: " + mensagem);
 				} catch (java.io.EOFException e) {
-
-				} finally {
-					din.close();
+					
 				}
 
 				/**
-				 * Caso receba uma notificão FINISH, remove o cliente do servidor
-				 * Significa que o cliente está saindo do bate papo
+				 * Caso receba uma notificão FINISH, remove o cliente do
+				 * servidor Significa que o cliente está saindo do bate papo
 				 */
 				if (mensagem != null && mensagem.equals("FINISH")) {
 					servidor.removeConnection(socket);
@@ -78,11 +97,11 @@ public class ServerConnHandler extends Thread{
 				// servidor.replicarMensagem(mensagem);
 			}
 		} catch (EOFException ex) {
-			ex.printStackTrace();
+			//ex.printStackTrace();
 		} catch (IOException ex) {
-			ex.printStackTrace();
+			//ex.printStackTrace();
 		} finally {
-			if(din!=null)
+			if (din != null)
 				try {
 					din.close();
 				} catch (IOException e) {
@@ -98,7 +117,7 @@ public class ServerConnHandler extends Thread{
 
 	public void enviarMensagem(Serializable obj) {
 		try {
-			if (!socket.isClosed() && socket.isConnected()){
+			if (!socket.isClosed() && socket.isConnected()) {
 				dout.writeUTF(JsonUtil.objectToJson(obj));
 				dout.flush();
 			}

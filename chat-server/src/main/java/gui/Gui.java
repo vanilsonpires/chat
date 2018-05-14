@@ -102,7 +102,7 @@ public class Gui extends JFrame implements Observer {
 		createPanelButton();
 		this.pack();
 		setVisible(true);
-		server = new SocketServer();
+		server = new SocketServer(this);
 		server.addObserver(this);
 		addLog("Sistema inicializado e pronto para uso");
 	}
@@ -254,7 +254,7 @@ public class Gui extends JFrame implements Observer {
 	}
 
 	// Adiciona um log
-	private void addLog(String msg) {
+	public void addLog(String msg) {
 		this.jTextAreaLogs
 				.setText(jTextAreaLogs.getText().concat("\n ".concat(getHoraAtual()).concat(" " + msg.trim())));
 		jTextAreaLogs.setCaretPosition(jTextAreaLogs.getText().length());

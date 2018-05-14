@@ -10,6 +10,8 @@ import java.awt.Dimension;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
+import engine.Session;
+
 /**
  * Representa o frame principal
  * 
@@ -27,9 +29,13 @@ public class Gui extends JFrame {
 		this.setIconImage(new ImageIcon(this.getClass().getResource("/chatting.png")).getImage());
 		this.setLayout(new BorderLayout());
 		this.setMinimumSize(new Dimension(400, 600));
+		this.setMaximumSize(this.getMinimumSize());
+		this.setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setLocationRelativeTo(null);
-		this.add(new Conversations(), BorderLayout.CENTER);
+		Conversations panelConversas = new Conversations();
+		Session.getInstane().addObserver(panelConversas);
+		this.add(panelConversas, BorderLayout.CENTER);
 
 		this.pack();
 		setVisible(true);

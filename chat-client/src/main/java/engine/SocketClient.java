@@ -4,9 +4,10 @@
  */
 package engine;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.Observable;
@@ -27,8 +28,8 @@ public class SocketClient extends Observable implements Serializable {
 	// servidor, enviados pelos outros clientes. A de escrita para enviar os
 	// dados
 	// para o servidor.
-	private ObjectInputStream din;
-	private ObjectOutputStream dout;
+	private DataInputStream din;
+	private DataOutputStream dout;
 
 	private String ipServer;
 	private Integer porta;
@@ -41,30 +42,28 @@ public class SocketClient extends Observable implements Serializable {
 
 		new Thread(new Runnable() {
 			// estamos a usar uma classe anônima...
-			public void run() {
+			public synchronized void run() {
 				
 				try {
 					
 					// criar o socket
 					socket = new Socket(ip, port);
 					
-					//Se chegar até aqui, então a conexão foi realizada com sucesso
-					//Deve se então realizar uma notificação
-					setChanged();
-					notifyObservers(Message.CONNECTION_SUCCESSFUL);
-
 					// Vamos obter as streams de comunicação fornecidas pelo socket
-					din = new ObjectInputStream(socket.getInputStream());
-					dout = new ObjectOutputStream(socket.getOutputStream());
-
+					din = new DataInputStream(socket.getInputStream());
+					dout = new DataOutputStream(socket.getOutputStream());
+					
+					//Envia o usuário que está logado
+					send(Session.getInstane().getJsonUser());
+										
 					// e iniciar a thread que vai estar constantemente espera de novas
 					// mensages. Se não usassemos uma thread, não conseguiamos receber
 					// mensagens enquanto estivessemos a escrever e toda a parte gráfica
 					// ficaria bloqueada.
-					
 					while (true) {
-
+					
 						String object = din.readUTF();
+						System.out.println(object);
 
 						// sequencialmente, ler as mensagens uma a uma e
 						// acrescentar ao
@@ -73,7 +72,10 @@ public class SocketClient extends Observable implements Serializable {
 						setChanged();
 						notifyObservers(object);
 					}
+				} catch (EOFException e) {
+					// TODO: handle exception
 				} catch (Exception e) {
+					e.printStackTrace();
 					setChanged();
 					notifyObservers(Message.CONNECTION_FAIL);
 				}
@@ -83,6 +85,7 @@ public class SocketClient extends Observable implements Serializable {
 
 	public void send(String message) throws IOException {
 		try {
+			System.out.println("Enviando "+message);
 			// enviar a mensagem para o servidor.
 			dout.writeUTF(message);
 		} catch (IOException ex) {

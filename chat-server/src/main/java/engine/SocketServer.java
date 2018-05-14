@@ -9,10 +9,15 @@ import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Observable;
 
+import gui.Gui;
+
 /**
- * Classe que representa um serviÁo socket
+ * Classe que representa um servi√ßo socket
  * 
  * @author Vanilson Pires Date 12 de mai de 2018
  */
@@ -23,13 +28,58 @@ public class SocketServer extends Observable implements Serializable {
 	 */
 	private static final long serialVersionUID = 3473134304114251612L;
 
+	private Gui gui;
+	private Map<Socket, String> users;
 	private ServerSocket servidor;
+	private List<String> userNames;
 
 	// guardar os clientes
 	private final ArrayList<ServerConnHandler> clientes;
 
-	public SocketServer() {
+	public SocketServer(Gui gui) {
+		this.gui = gui;
 		clientes = new ArrayList<ServerConnHandler>();
+		users = new HashMap<Socket, String>();
+		this.userNames = new ArrayList<String>();
+	}
+
+	public boolean addUser(Socket socket, String msg) {
+
+		String keyUser = "username:";
+		String keyStatus = "status:";
+
+		if (msg.contains(keyUser) && msg.contains(keyStatus)) {
+			String userName = msg.substring(msg.indexOf(keyUser) + keyUser.length(), msg.indexOf(","));
+			if (!userNames.contains(userName)) {
+				users.put(socket, msg);
+				userNames.add(userName);
+				return true;
+			} else{
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public void addLog(String log) {
+		gui.addLog(log);
+	}
+
+	/**
+	 * Retorna os usu√°rios em String
+	 * 
+	 * @author Vanilson Pires Date 13 de mai de 2018
+	 * @return
+	 */
+	public String getUsers() {
+		StringBuilder builder = new StringBuilder();
+		for (Socket socket : users.keySet()) {
+			String json = users.get(socket);
+			builder.append(json);
+			builder.append("<next>");
+		}
+		return builder.toString();
 	}
 
 	/**
@@ -37,30 +87,32 @@ public class SocketServer extends Observable implements Serializable {
 	 * 
 	 * @author Vanilson Pires Date 12 de mai de 2018
 	 * @param port
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public void listen(final int port) throws Exception {
 
 		final SocketServer socketServer = this;
 
-		// Inst‚ncia uma tarefa runnable
+		// Inst√¢ncia uma tarefa runnable
 		Task task = new Task() {
 			@Override
 			public void run() {
 				try {
-					// Inst‚ncia um serviÁo socket
+					// Inst√¢ncia um servi√ßo socket
 					servidor = new ServerSocket(port);
 
 					// Loop infinito para sempre ficar esperando por novas
-					// conexıe
+					// conex√µes
 					while (servidor != null) {
 						Socket cliente = servidor.accept();
 						clientes.add(new ServerConnHandler(socketServer, cliente));
 						setChanged();
-						notifyObservers("Novo cliente conectado: ["+cliente.getInetAddress().getHostName()+"] IP: "+cliente.getInetAddress().getHostAddress());
+						notifyObservers("Novo cliente conectado: [" + cliente.getInetAddress().getHostName() + "] IP: "
+								+ cliente.getInetAddress().getHostAddress());
+						replicarMensagem("GET_USERS:" + getUsers());
 					}
 				} catch (Exception e) {
-					if(!e.getMessage().equals("socket closed")){
+					if (!e.getMessage().equals("socket closed")) {
 						setChanged();
 						notifyObservers(e);
 					}
@@ -130,11 +182,11 @@ public class SocketServer extends Observable implements Serializable {
 			return false;
 		return !servidor.isClosed();
 	}
-	
-	public void close() throws IOException{
-		if(servidor!=null){
+
+	public void close() throws IOException {
+		if (servidor != null) {
 			servidor.close();
 			this.servidor = null;
-		}	
+		}
 	}
 }

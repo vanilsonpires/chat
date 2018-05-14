@@ -276,7 +276,7 @@ public class Authentication extends JFrame implements Observer {
 	@Override
 	public void update(Observable o, Object arg) {
 
-		if (arg instanceof Message) {
+		if (arg != null && arg instanceof Message) {
 
 			Message message = (Message) arg;
 
@@ -293,6 +293,14 @@ public class Authentication extends JFrame implements Observer {
 				btnEntrar.updateUI();
 				JOptionPane.showMessageDialog(this, "Falha na conexão com o servidor", "ERRO",
 						JOptionPane.ERROR_MESSAGE);
+				break;
+				
+			case EXISTING_USER:
+				btnEntrar.setText("ENTRAR");
+				btnEntrar.setEnabled(true);
+				btnEntrar.updateUI();
+				JOptionPane.showMessageDialog(this, "Este apelido já está em uso", "ATENÇÃO",
+						JOptionPane.WARNING_MESSAGE);
 				break;
 
 			default:
