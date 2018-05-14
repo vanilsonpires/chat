@@ -43,6 +43,19 @@ public class SocketServer extends Observable implements Serializable {
 		this.userNames = new ArrayList<String>();
 	}
 
+	public void sendMessage(String origem, String destino, String msg){
+		try {
+			for(ServerConnHandler connHandler : clientes){
+				if(connHandler.getSocket().equals(users.get(destino))){
+					connHandler.enviarMensagem(msg);
+					return;
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+	
 	public boolean addUser(Socket socket, String msg) {
 
 		String keyUser = "username:";
@@ -108,8 +121,7 @@ public class SocketServer extends Observable implements Serializable {
 						clientes.add(new ServerConnHandler(socketServer, cliente));
 						setChanged();
 						notifyObservers("Novo cliente conectado: [" + cliente.getInetAddress().getHostName() + "] IP: "
-								+ cliente.getInetAddress().getHostAddress());
-						replicarMensagem("GET_USERS:" + getUsers());
+								+ cliente.getInetAddress().getHostAddress());						
 					}
 				} catch (Exception e) {
 					if (!e.getMessage().equals("socket closed")) {
@@ -121,14 +133,19 @@ public class SocketServer extends Observable implements Serializable {
 		};
 		task.execute();
 	}
+	
+	public void atualizarUsuarios() throws IOException{
+		replicarMensagem("GET_USERS:" + getUsers());
+	}
 
 	/**
 	 * Envia mensagem para todos clientes
 	 * 
 	 * @author Vanilson Pires Date 12 de mai de 2018
 	 * @param mensagem
+	 * @throws IOException 
 	 */
-	public void replicarMensagem(Serializable mensagem) {
+	public void replicarMensagem(String mensagem) throws IOException {
 		synchronized (clientes) {
 			for (ServerConnHandler cl : clientes) {
 				cl.enviarMensagem(mensagem);

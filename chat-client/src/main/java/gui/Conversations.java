@@ -6,7 +6,7 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.ComponentOrientation;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -20,6 +20,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -34,7 +35,7 @@ import engine.Session;
 @SuppressWarnings("serial")
 public class Conversations extends JPanel implements Serializable , Observer{
 
-	private JPanel panelUsers;
+	private JPanel panelBase;
 
 	/**
 	 * @author Vanilson Pires Date 13 de mai de 2018
@@ -42,7 +43,15 @@ public class Conversations extends JPanel implements Serializable , Observer{
 	public Conversations() {
 		this.setLayout(new BorderLayout());
 		this.add(createPanelTopo(), BorderLayout.NORTH);
-		this.add(panelUsers = createPanelUsers(), BorderLayout.CENTER);
+	
+		panelBase = new JPanel();
+		createPanelUsers();
+		JScrollPane jScrollPane = new JScrollPane(panelBase);
+		jScrollPane.setBorder(BorderFactory.createEmptyBorder());
+		jScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		jScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		
+		this.add(jScrollPane, BorderLayout.CENTER);
 	}
 
 	private JPanel createPanelTopo() {
@@ -66,6 +75,7 @@ public class Conversations extends JPanel implements Serializable , Observer{
 	}
 
 	private JPanel createPanelTitleUser() {
+		
 		JPanel jPanel = new JPanel();
 		jPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
@@ -90,22 +100,36 @@ public class Conversations extends JPanel implements Serializable , Observer{
 		return jPanel;
 	}
 
-	private JPanel createPanelUsers() {
+	private void createPanelUsers() {
 		
-		JPanel panelBase = new JPanel();
+		panelBase.removeAll();
 		panelBase.setLayout(new FlowLayout(FlowLayout.CENTER));
 		panelBase.setBorder(BorderFactory.createTitledBorder("Pessoas conectadas:"));
 		
 		JPanel jPanel = new JPanel();
 		jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.PAGE_AXIS));		
 		Border border = jPanel.getBorder();
-		Border margin = new EmptyBorder(10, 10, 10, 10);
+		Border margin = new EmptyBorder(10, 5, 10, 5);
 		jPanel.setBorder(new CompoundBorder(border, margin));
 		
 		Map<String,String> usuarios = Session.getInstane().getUsuarios();
 		for(String s : usuarios.keySet()){
 			
 			JPanel panelUs = new JPanel();
+			panelUs.addMouseListener(new java.awt.event.MouseAdapter() {
+			    public void mouseEntered(java.awt.event.MouseEvent evt) {
+			    	panelUs.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+			    	panelUs.setCursor(new Cursor(Cursor.HAND_CURSOR));
+			    }
+			    public void mouseExited(java.awt.event.MouseEvent evt) {
+			    	panelUs.setBorder(BorderFactory.createEmptyBorder());
+			    	panelUs.setCursor(Cursor.getDefaultCursor());
+			    }
+				public void mouseClicked(java.awt.event.MouseEvent evt) {
+					Session.getInstane().showConversa(s);
+				}
+			});
+			
 			panelUs.setLayout(new BorderLayout());
 			panelUs.setPreferredSize(new Dimension(370, 45));
 			
@@ -140,7 +164,6 @@ public class Conversations extends JPanel implements Serializable , Observer{
 		}
 		
 		panelBase.add(jPanel);
-		return panelBase;
 		
 	}
 
@@ -154,13 +177,10 @@ public class Conversations extends JPanel implements Serializable , Observer{
 			Message msg = (Message) arg;
 			
 			if(msg==Message.UPDATE_USERS){
-				this.add(panelUsers = createPanelUsers(), BorderLayout.CENTER);
-				this.repaint();
-				this.revalidate();
-				this.updateUI();
+				createPanelUsers();
+				panelBase.updateUI();
 				System.out.println("Atualizou os usuários:");
 			}
 		}
 	}
-
 }

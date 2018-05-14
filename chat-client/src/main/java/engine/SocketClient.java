@@ -63,7 +63,6 @@ public class SocketClient extends Observable implements Serializable {
 					while (true) {
 					
 						String object = din.readUTF();
-						System.out.println(object);
 
 						// sequencialmente, ler as mensagens uma a uma e
 						// acrescentar ao
@@ -85,7 +84,6 @@ public class SocketClient extends Observable implements Serializable {
 
 	public void send(String message) throws IOException {
 		try {
-			System.out.println("Enviando "+message);
 			// enviar a mensagem para o servidor.
 			dout.writeUTF(message);
 		} catch (IOException ex) {
@@ -96,7 +94,6 @@ public class SocketClient extends Observable implements Serializable {
 	public void fechar() throws IOException {
 		send("FINISH");
 		this.socket.close();
-		System.out.println("Socket fechado");
 	}
 
 	public boolean isClosed() {

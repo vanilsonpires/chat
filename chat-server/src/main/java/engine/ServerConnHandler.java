@@ -8,7 +8,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
 
 /**
@@ -56,9 +55,7 @@ public class ServerConnHandler extends Thread {
 			while (true) {
 
 				try {
-					System.out.println("Esperando novas mensagens...");
-					mensagem = din.readUTF();
-					System.out.println("Mensagem recebida pelo servidor: "+mensagem);					
+					mensagem = din.readUTF();				
 					servidor.addLog(mensagem);
 
 					// Se for solicitado a listagem de usuários...
@@ -74,13 +71,16 @@ public class ServerConnHandler extends Thread {
 						
 						if(servidor.addUser(socket, mensagem)){
 							enviarMensagem("CONNECTION_SUCCESSFUL");
+							servidor.atualizarUsuarios();
 						}else{
 							enviarMensagem("EXISTING_USER");
 							servidor.removeConnection(socket);
 						}						
+					}else if(mensagem.contains("message:") && mensagem.contains("%user%")){						
+						servidor.replicarMensagem(mensagem);
 					}
-
-					System.err.println("LIDO: " + mensagem);
+				
+				
 				} catch (java.io.EOFException e) {
 					
 				}
@@ -91,7 +91,7 @@ public class ServerConnHandler extends Thread {
 				 */
 				if (mensagem != null && mensagem.equals("FINISH")) {
 					servidor.removeConnection(socket);
-					System.out.println("Socket removido do server");
+					servidor.atualizarUsuarios();
 				}
 
 				// servidor.replicarMensagem(mensagem);
@@ -113,17 +113,6 @@ public class ServerConnHandler extends Thread {
 
 	public void enviarMensagem(String mensagem) throws IOException {
 		dout.writeUTF(mensagem);
-	}
-
-	public void enviarMensagem(Serializable obj) {
-		try {
-			if (!socket.isClosed() && socket.isConnected()) {
-				dout.writeUTF(JsonUtil.objectToJson(obj));
-				dout.flush();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public void fechar() throws IOException {

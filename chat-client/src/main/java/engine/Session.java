@@ -12,6 +12,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import constraints.Message;
+import gui.Conversa;
 
 /**
  * Classe que representa a sessão da aplicação utilizando padrão Singleton
@@ -26,6 +27,7 @@ public class Session extends Observable implements Serializable, Observer {
 		ONLINE, OFFILINE, OCUPADO
 	};
 
+	private Map<String, Conversa> conversas;
 	private Status status;
 	private SocketClient socketClient;
 	private static final Session INSTANCE = new Session();
@@ -39,6 +41,18 @@ public class Session extends Observable implements Serializable, Observer {
 	private Session() {
 		this.usuarios = new HashMap<String, String>();
 		this.status = Status.ONLINE;
+		this.conversas = new HashMap<String, Conversa>();
+	}
+
+	public void showConversa(String userKey) {
+		Conversa conversa = conversas.get(userKey);
+		if (conversa == null){
+			conversa = new Conversa(userKey);
+			this.addObserver(conversa);
+			conversas.put(userKey, conversa);
+		}else{
+			conversa.setVisible(true);
+		}	
 	}
 
 	/**
@@ -117,6 +131,21 @@ public class Session extends Observable implements Serializable, Observer {
 					setChanged();
 					notifyObservers(Message.EXISTING_USER);
 					return;
+				}else if(msg.contains("message:") && msg.contains("%user%")){
+					String origem = msg.substring(msg.indexOf("%user%")+"%user%".length(), msg.lastIndexOf("%user%"));
+					String destino = msg.substring(msg.indexOf("message:")+"message:".length(), msg.indexOf(":%user%"));
+					String texto =  msg.substring(msg.lastIndexOf("%user%")+"%user%".length(), msg.length());	
+					
+					//Se esta mensagem for para esta sessão...
+					if(destino.equals(socketClient.getUserName())){
+						//Procuro quem enviou...
+						Conversa conversa = conversas.get(origem);
+						if(conversa==null){
+							showConversa(origem);
+							conversa = conversas.get(origem);
+						}
+						conversa.addMensagem(origem, texto);
+					}
 				}
 			}
 
@@ -195,5 +224,11 @@ public class Session extends Observable implements Serializable, Observer {
 	 */
 	public Map<String, String> getUsuarios() {
 		return usuarios;
+	}
+	
+	public boolean sendMessage(String message, String userId) throws IOException{
+		String corpo = "message:" + userId+":"+message;		
+		socketClient.send(corpo);
+		return true;
 	}
 }
